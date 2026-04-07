@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ys変換ツール</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            margin-bottom: 20px;
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 10px;
+        }
+        .editor-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 80px 1fr;
+            gap: 15px;
+            height: 75vh;
+        }
+        .column {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #495057;
+        }
+        textarea {
+            flex: 1;
+            padding: 15px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #0056b3;
+            box-shadow: 0 0 0 0.2rem rgba(0,86,179,.25);
+        }
+        .btn-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        button {
+            width: 60px;
+            height: 60px;
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            background-color: #004494;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="header">
+        <h1>yskw変換ツール</h1>
+    </div>
+
+    <div class="editor-wrapper">
+        <div class="column">
+            <label for="inputText">入力テキスト (1. 2. ...)</label>
+            <textarea id="inputText" placeholder="ここにテキストをコピー＆ペーストしてください..."></textarea>
+        </div>
+
+        <div class="btn-container">
+            <button onclick="processText()" title="変換実行">変換</button>
+        </div>
+
+        <div class="column">
+            <label for="outputText">出力結果 (HTML)</label>
+            <textarea id="outputText" readonly placeholder="ここに変換結果が表示されます..."></textarea>
+        </div>
+    </div>
+</div>
+
+<script>
+    function processText() {
+        const input = document.getElementById('inputText').value.trim();
+        if (!input) return;
+
+        // 「数字.」で始まる塊を抽出する正規表現
+        const regex = /(\d+)\.([\s\S]*?)(?=\n\d+\.|$)/g;
+        let match;
+        let results = [];
+
+        while ((match = regex.exec(input)) !== null) {
+            const num = match[1];
+            let content = match[2].trim();
+
+            // 1. 内容に含まれる改行を <br> に変換
+            // 2. 改行後の行頭に半角スペース4つを追加して体裁を整える
+            if (content.includes('\n')) {
+                content = content.replace(/\n/g, '<br>\n    ');
+            }
+
+            // 最終的なタグの組み立て
+            results.push(`<p>∗${num} ${content}</p>`);
+        }
+
+        // 結果を出力エリアへ（各段落の間に改行を入れる）
+        document.getElementById('outputText').value = results.join('\n');
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ys変換ツールsup</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4fcf8;
+        }
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            margin-bottom: 20px;
+            border-bottom: 2px solid #198754;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            color: #198754;
+            margin: 0;
+        }
+        .editor-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 80px 1fr;
+            gap: 15px;
+            height: 75vh;
+        }
+        .column {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        textarea {
+            flex: 1;
+            padding: 15px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            resize: none;
+            white-space: pre;
+            overflow-wrap: normal;
+            overflow-x: auto;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #198754;
+            box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+        }
+        .btn-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        button {
+            width: 65px;
+            height: 65px;
+            background-color: #198754;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            background-color: #146c43;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="header">
+        <h1>yskw変換ツールsup</h1>
+    </div>
+
+    <div class="editor-wrapper">
+        <div class="column">
+            <label for="inputText">入力テキスト (HTMLのテーブルタグ等)</label>
+            <textarea id="inputText" placeholder="ここにHTMLをコピー＆ペーストしてください..."></textarea>
+        </div>
+
+        <div class="btn-container">
+            <button onclick="processHTML()" title="変換実行">変換</button>
+        </div>
+
+        <div class="column">
+            <label for="outputText">出力結果 (HTML)</label>
+            <textarea id="outputText" readonly placeholder="ここにきれいに変換されたHTMLが表示されます..."></textarea>
+        </div>
+    </div>
+</div>
+
+<script>
+    function processHTML() {
+        const input = document.getElementById('inputText').value.trim();
+        if (!input) return;
+
+        // DOMParserを使って文字列を本物のDOMツリーとして解析
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(input, 'text/html');
+
+        // 1. tableのクラス変更とcolgroupの削除
+        const tables = doc.querySelectorAll('table');
+        tables.forEach(table => {
+            table.className = 'table-common';
+            const colgroup = table.querySelector('colgroup');
+            if (colgroup) colgroup.remove();
+        });
+
+        // 2. 注釈リンク（<a class="x-xref...">）を <sup>*X, Y</sup> に変換
+        const xRefs = doc.querySelectorAll('a[class*="x-xref"]');
+        xRefs.forEach(a => {
+            let text = a.textContent.trim();
+            // "1,2" を "1, 2" のようにカンマの後にスペースを入れる
+            text = text.replace(/,/g, ', ');
+
+            const sup = doc.createElement('sup');
+            sup.textContent = `*${text}`;
+            a.replaceWith(sup);
+        });
+
+        // 3. 上付き文字（<span class="x-sup...">）を <sup>X</sup> に変換
+        const sups = doc.querySelectorAll('span[class*="x-sup"]');
+        sups.forEach(span => {
+            const text = span.textContent.trim();
+            const sup = doc.createElement('sup');
+            sup.textContent = text;
+            span.replaceWith(sup);
+        });
+
+        // 解析・操作したDOMを文字列に戻す
+        let resultHTML = doc.body.innerHTML;
+
+        document.getElementById('outputText').value = resultHTML;
+    }
+</script>
+
+</body>
+</html>
