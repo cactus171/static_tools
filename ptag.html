@@ -82,12 +82,12 @@
 
 <div class="main-container">
     <div class="header">
-        <h1>yskw変換ツール</h1>
+        <h1>ys変換ツール</h1>
     </div>
 
     <div class="editor-wrapper">
         <div class="column">
-            <label for="inputText">入力テキスト (1. 2. ...)</label>
+            <label for="inputText">入力テキスト (1. または *1 ...)</label>
             <textarea id="inputText" placeholder="ここにテキストをコピー＆ペーストしてください..."></textarea>
         </div>
 
@@ -107,14 +107,15 @@
         const input = document.getElementById('inputText').value.trim();
         if (!input) return;
 
-        // 「数字.」で始まる塊を抽出する正規表現
-        const regex = /(\d+)\.([\s\S]*?)(?=\n\d+\.|$)/g;
+        // 行頭が「数字.」または「*数字」(半角・全角・特殊記号対応) で始まる塊を抽出する正規表現
+        const regex = /(?:^|\n)\s*(?:[*∗＊]\s*(\d+)|(\d+)\.)\s*([\s\S]*?)(?=(?:\n\s*(?:[*∗＊]\s*\d+|\d+\.))|$)/g;
         let match;
         let results = [];
 
         while ((match = regex.exec(input)) !== null) {
-            const num = match[1];
-            let content = match[2].trim();
+            // match[1] には *1 の数字部分、match[2] には 1. の数字部分が入る
+            const num = match[1] || match[2];
+            let content = match[3].trim();
 
             // 1. 内容に含まれる改行を <br> に変換
             // 2. 改行後の行頭に半角スペース4つを追加して体裁を整える
