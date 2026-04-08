@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画像タグ抽出・パス変換ツール</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            margin-bottom: 20px;
+            border-bottom: 2px solid #fd7e14;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            color: #fd7e14;
+            margin: 0;
+        }
+        .editor-wrapper {
+            display: flex;
+            gap: 20px;
+            height: 75vh;
+        }
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 15px;
+        }
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        .btn-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+        }
+        label {
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #495057;
+        }
+        textarea {
+            padding: 15px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            resize: none;
+            white-space: pre;
+            overflow-wrap: normal;
+            overflow-x: auto;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #fd7e14;
+            box-shadow: 0 0 0 0.2rem rgba(253, 126, 20, 0.25);
+        }
+        /* 入力1用（高さ固定） */
+        #inputText1 {
+            height: 60px;
+            flex: none;
+        }
+        /* 入力2・出力用（残り高さを埋める） */
+        #inputText2, #outputText {
+            flex: 1;
+        }
+        button {
+            width: 65px;
+            height: 65px;
+            background-color: #fd7e14;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            background-color: #e8590c;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="header">
+        <h1>画像タグ抽出・パス変換ツール</h1>
+    </div>
+
+    <div class="editor-wrapper">
+        <div class="left-column">
+            <div>
+                <label for="inputText1">入力1: パス情報</label>
+                <textarea id="inputText1" placeholder="例: product/aa/bb.html      https://..."></textarea>
+            </div>
+            <div style="display: flex; flex-direction: column; flex: 1;">
+                <label for="inputText2">入力2: HTML要素</label>
+                <textarea id="inputText2" placeholder="ここに画像タグを含むHTMLを貼り付けてください..."></textarea>
+            </div>
+        </div>
+
+        <div class="btn-container">
+            <button onclick="processHTML()" title="変換実行">変換</button>
+        </div>
+
+        <div class="right-column">
+            <label for="outputText">出力結果 (抽出された画像タグ)</label>
+            <textarea id="outputText" readonly placeholder="ここに変換・抽出されたimgタグが出力されます..."></textarea>
+        </div>
+    </div>
+</div>
+
+<script>
+    function processHTML() {
+        const input1 = document.getElementById('inputText1').value.trim();
+        const input2 = document.getElementById('inputText2').value.trim();
+
+        if (!input1 || !input2) {
+            alert("入力1と入力2の両方にテキストを入れてください。");
+            return;
+        }
+
+        // ==========================================
+        // 1. パス情報の解析 (Input 1)
+        // ==========================================
+        // スペースやタブで分割して最初の塊を取得
+        const parts = input1.split(/\s+/);
+        let rawPath = parts[0];
+
+        // ".html" を削除してベースのディレクトリパスを作成
+        let basePath = rawPath.replace(/\.html$/, '');
+        // 先頭に "/" がなければ付与する
+        if (!basePath.startsWith('/')) {
+            basePath = '/' + basePath;
+        }
+
+        // ==========================================
+        // 2. HTMLの解析と抽出 (Input 2)
+        // ==========================================
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(input2, 'text/html');
+        const imgs = doc.querySelectorAll('img');
+
+        let results = [];
+
+        imgs.forEach(img => {
+            const src = img.getAttribute('src');
+            if (!src) return;
+
+            // ページトップへ戻るボタンなど、共通のUI画像を除外する
+            if (src.includes('pagetop.gif')) return;
+
+            // URLの末尾のファイル名だけを抽出 (例: xwc1975...svg)
+            const filename = src.split('/').pop();
+
+            // ベースパスとファイル名を結合
+            const newSrc = `${basePath}/${filename}`;
+            const alt = img.getAttribute('alt') || 'Image';
+
+            // 指定されたフォーマットで組み立て
+            const formattedTag = `<div>\n    <img src="${newSrc}" alt="${alt}">\n</div>`;
+            results.push(formattedTag);
+        });
+
+        // 抽出した画像タグを出力エリアへ（複数ある場合は空行を開けて結合）
+        document.getElementById('outputText').value = results.join('\n\n');
+    }
+</script>
+
+</body>
+</html>
