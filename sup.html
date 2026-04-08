@@ -34,8 +34,13 @@
             display: flex;
             flex-direction: column;
         }
-        label {
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 8px;
+        }
+        label {
             font-weight: bold;
             color: #2c3e50;
         }
@@ -62,7 +67,8 @@
             align-items: center;
             justify-content: center;
         }
-        button {
+        /* 中央の変換ボタン */
+        .convert-btn {
             width: 65px;
             height: 65px;
             background-color: #198754;
@@ -75,13 +81,28 @@
             transition: all 0.2s;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        button:hover {
+        .convert-btn:hover {
             background-color: #146c43;
             transform: translateY(-2px);
             box-shadow: 0 6px 8px rgba(0,0,0,0.15);
         }
-        button:active {
+        .convert-btn:active {
             transform: translateY(0);
+        }
+        /* コピーボタン */
+        .copy-btn {
+            padding: 5px 12px;
+            background-color: #0d6efd; /* アクセントのブルー */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .copy-btn:hover {
+            background-color: #0b5ed7;
         }
     </style>
 </head>
@@ -94,16 +115,21 @@
 
     <div class="editor-wrapper">
         <div class="column">
-            <label for="inputText">入力テキスト (HTMLのテーブルタグ等)</label>
+            <div class="label-row">
+                <label for="inputText">入力テキスト (HTMLのテーブルタグ等)</label>
+            </div>
             <textarea id="inputText" placeholder="ここにHTMLをコピー＆ペーストしてください..."></textarea>
         </div>
 
         <div class="btn-container">
-            <button onclick="processHTML()" title="変換実行">変換</button>
+            <button class="convert-btn" onclick="processHTML()" title="変換実行">変換</button>
         </div>
 
         <div class="column">
-            <label for="outputText">出力結果 (HTML)</label>
+            <div class="label-row">
+                <label for="outputText">出力結果 (HTML)</label>
+                <button class="copy-btn" id="copyBtn" onclick="copyToClipboard()" title="結果をコピー">コピー</button>
+            </div>
             <textarea id="outputText" readonly placeholder="ここにきれいに変換されたHTMLが表示されます..."></textarea>
         </div>
     </div>
@@ -153,6 +179,35 @@
         let resultHTML = doc.body.innerHTML;
 
         document.getElementById('outputText').value = resultHTML;
+    }
+
+    // クリップボードにコピーする関数
+    function copyToClipboard() {
+        const outputText = document.getElementById('outputText').value;
+        const copyBtn = document.getElementById('copyBtn');
+
+        if (!outputText) {
+            alert('コピーする結果がありません。先に変換を実行してください。');
+            return;
+        }
+
+        navigator.clipboard.writeText(outputText).then(() => {
+            // 成功時の処理（ボタンの文字と色を一時的に変更）
+            const originalText = copyBtn.innerText;
+            const originalBg = copyBtn.style.backgroundColor;
+
+            copyBtn.innerText = 'コピーしました！';
+            copyBtn.style.backgroundColor = '#198754'; // テーマカラーのグリーンに変更
+
+            // 2秒後に元の状態に戻す
+            setTimeout(() => {
+                copyBtn.innerText = originalText;
+                copyBtn.style.backgroundColor = originalBg;
+            }, 2000);
+        }).catch(err => {
+            console.error('コピーに失敗しました: ', err);
+            alert('クリップボードへのコピーに失敗しました。');
+        });
     }
 </script>
 
