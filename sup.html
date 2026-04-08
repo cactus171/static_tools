@@ -118,10 +118,12 @@
         const parser = new DOMParser();
         const doc = parser.parseFromString(input, 'text/html');
 
-        // 1. tableのクラス変更とcolgroupの削除
+        // 1. tableのクラス変更、width属性の削除、colgroupの削除
         const tables = doc.querySelectorAll('table');
         tables.forEach(table => {
-            table.className = 'table-common';
+            table.className = 'table-common'; // クラス名を統一
+            table.removeAttribute('width');   // width属性を削除
+
             const colgroup = table.querySelector('colgroup');
             if (colgroup) colgroup.remove();
         });
