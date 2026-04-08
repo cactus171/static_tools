@@ -111,7 +111,7 @@
         <div class="left-column">
             <div>
                 <label for="inputText1">入力1: パス情報</label>
-                <textarea id="inputText1" placeholder="例: product/aa/bb.html      https://..."></textarea>
+                <textarea id="inputText1" placeholder="例: path/to/abc/example.html"></textarea>
             </div>
             <div style="display: flex; flex-direction: column; flex: 1;">
                 <label for="inputText2">入力2: HTML要素</label>
@@ -143,9 +143,7 @@
         // ==========================================
         // 1. パス情報の解析 (Input 1)
         // ==========================================
-        // スペースやタブで分割して最初の塊を取得
-        const parts = input1.split(/\s+/);
-        let rawPath = parts[0];
+        let rawPath = input1;
 
         // ".html" を削除してベースのディレクトリパスを作成
         let basePath = rawPath.replace(/\.html$/, '');
@@ -170,15 +168,20 @@
             // ページトップへ戻るボタンなど、共通のUI画像を除外する
             if (src.includes('pagetop.gif')) return;
 
-            // URLの末尾のファイル名だけを抽出 (例: xwc1975...svg)
+            // URLの末尾のファイル名だけを抽出
             const filename = src.split('/').pop();
 
             // ベースパスとファイル名を結合
             const newSrc = `${basePath}/${filename}`;
-            const alt = img.getAttribute('alt') || 'Image';
+
+            // alt属性の処理（元タグにaltがあれば取得し、なければ空のままにする）
+            let altString = '';
+            if (img.hasAttribute('alt')) {
+                altString = ` alt="${img.getAttribute('alt')}"`;
+            }
 
             // 指定されたフォーマットで組み立て
-            const formattedTag = `<div>\n    <img src="${newSrc}" alt="${alt}">\n</div>`;
+            const formattedTag = `<div>\n    <img src="${newSrc}"${altString}>\n</div>`;
             results.push(formattedTag);
         });
 
