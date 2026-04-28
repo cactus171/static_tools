@@ -92,7 +92,7 @@
         /* コピーボタン */
         .copy-btn {
             padding: 20px 60px;
-            background-color: #28a745; /* アクセントのブルー */
+            background-color: #28a745; /* アクセントのグリーン */
             color: white;
             border: none;
             border-radius: 8px;
@@ -150,17 +150,29 @@
         const parser = new DOMParser();
         const doc = parser.parseFromString(input, 'text/html');
 
-        // 1. tableのクラス変更、width属性の削除、colgroupの削除
+        // 1. tableのクラス変更、width属性の削除、colgroupの削除 (一番外側のみ)
         const tables = doc.querySelectorAll('table');
         tables.forEach(table => {
-            table.className = 'table-common'; // クラス名を統一
-            table.removeAttribute('width');   // width属性を削除
+            // 親要素を遡って別のtableタグが存在しない場合のみ処理（＝一番外側のtable）
+            if (!table.parentElement.closest('table')) {
+                table.className = 'table-common'; // クラス名を統一
+                table.removeAttribute('width');   // width属性を削除
 
-            const colgroup = table.querySelector('colgroup');
-            if (colgroup) colgroup.remove();
+                const colgroup = table.querySelector('colgroup');
+                if (colgroup) colgroup.remove();
+            }
         });
 
-        // 2. 注釈リンク（<a class="x-xref...">）を <sup>*X, Y</sup> に変換
+        // 2. 指定されたクラスの置換
+        doc.querySelectorAll('.num_list').forEach(el => {
+            el.classList.replace('num_list', 'list-decimal');
+        });
+
+        doc.querySelectorAll('.disc_list').forEach(el => {
+            el.classList.replace('disc_list', 'list-disc');
+        });
+
+        // 3. 注釈リンク（<a class="x-xref...">）を <sup>*X, Y</sup> に変換
         const xRefs = doc.querySelectorAll('a[class*="x-xref"]');
         xRefs.forEach(a => {
             let text = a.textContent.trim();
@@ -172,7 +184,7 @@
             a.replaceWith(sup);
         });
 
-        // 3. 上付き文字（<span class="x-sup...">）を <sup>X</sup> に変換
+        // 4. 上付き文字（<span class="x-sup...">）を <sup>X</sup> に変換
         const sups = doc.querySelectorAll('span[class*="x-sup"]');
         sups.forEach(span => {
             const text = span.textContent.trim();
